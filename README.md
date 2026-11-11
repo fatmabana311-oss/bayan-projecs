@@ -63,7 +63,7 @@ Municipal operational centers deal with large volumes of unstructured, multi-dia
 - **Vector Database**: FAISS (Facebook AI Similarity Search)
 - **NLP Tools**: CAMeL Tools (for Arabic clitics and morphological segmentation)
 - **Evaluation**: Scikit-Learn, Pandas, NumPy
-# How to Run the Project (make serve)
+
 # Future Improvements: 
 1. Data Augmentation for Weak Slices: Collect and annotate more Egyptian and Levantine dialectal feedback to shrink the performance gap.
 2. Multi-Label Classification: Upgrade the classifier pipeline to support multi-label predictions for longer feedback inputs that express more than one complaint.
