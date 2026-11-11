@@ -1,38 +1,36 @@
 # Final-Project--Bayan-bilingual-citizen-feedback
 # Project Overview: 
+Bayan turns Arabic/English citizen messages into structured cases: topic classification, sentiment, entity extraction, and similar-case retrieval. Built by integrating the components developed in Labs 1–7 (SDAIA Academy, SDA-AIE-211).
 This is an AI-powered system designed to process citizen complaints and suggestions. It serves municipal operations by automatically sorting incoming text requests into administrative categories and allowing agents to immediately find historically resolved cases that match new incoming issues—even if they are written in a different language or dialect.
 # Problem Description: 
-Municipal operational centers deal with large volumes of unstructured, multi-dialectal, and bilingual feedback daily. Operational bottlenecks include:
-1. **Topic Classification**: Inconsistent classification of incoming complaints due to dialectal nuances (e.g., Gulf vs. Egyptian Arabic vs. MSA) and varying feedback lengths.
-2. **Historical Case Retrieval**: The inability of customer service agents to quickly locate previous resolutions for similar historical issues, resulting in slow and disjointed manual routing.
-3. **Ambiguity and Noise**: Short, vague, or multi-topic messages that cannot be accurately categorized by simple rule-based parser
+Citizens send free-text feedback (Arabic and English, mixed dialects, emoji, phone numbers, elongation). Raw messages must be cleaned safely (PII masked first) and converted into: a classified topic, extracted entities, and a list of similar past cases.
 # Dataset & Model Used:
 - **Dataset**: 
   - **`bayan_feedback_clean.csv`**: Over 3,400 cleaned, labeled, and annotated feedback items.
   - **`bayan_cases.csv`**: A repository of 20,000 resolved historical cases used for building the semantic search database.
   - **`bayan_queries.jsonl`**: Standardized, human-judged test queries used to evaluate search metrics.
 - **Models Used**:
-  - **Classifier**: **XLM-RoBERTa (fine-tuned)** fine-tuned locally for multi-class classification (`bayan_topic_model`).
-  - **Embeddings**: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` to support cross-lingual semantic matching (English $\leftrightarrow$ Arabic).
-  - **Re-ranker**: `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1` for deep context alignment.
+ - **Data:** `bayan_feedback.csv` — 12,000 messages (6,000 Arabic, 6,000 English), columns include topic, sentiment, dialect_region. Cleaned version: `bayan_feedback_clean.csv` (output of Lab 1).
+- **Preprocessing:** `src/bayan/preprocess.py`, version `bayan-preproc-v1` (mask PII → Unicode NFC → remove tatweel → normalize whitespace).
+- **Tokenizer audit (Lab 1, measured fertility):**
+
+| Model | ar | en |
+|---|---|---|
+| XLM-R | 1.60 | 1.15 |
+| mBERT | 2.23 | 1.15 |
+| CAMeLBERT | 1.29 | 2.45 |
+
+  Decision: Arabic → CAMeLBERT; bilingual → XLM-R. [TODO: confirm which checkpoint `bayan_topic_model` is actually based on]
+- **Transformer anatomy (Lab 2, measured):** our attention and multi-head attention implementations matched PyTorch's outputs (`allclose` = True); masks verified on real Bayan sentences; the padding regression test passed with the mask (True) and failed without it (False). With the `xlm-roberta-base` tokenizer, p95 token length is 11 overall (Arabic 13, English 10); `MAX_LENGTH = 11` truncates 4.2% of messages.
+- **Classifier:** `bayan_topic_model` (Lab 3a). [TODO: base model, number of classes]
+- **NER (Lab 3b):** `xlm-roberta-base` fine-tuned for token classification on `bayan_ner_4000.csv` (3,400 train / 600 validation; tags PERSON, LOCATION, SERVICE), 1 epoch, scored with entity-level F1 (seqeval). Saved as `bayan_ner_model`.
+- **QA (Lab 3b):** `xlm-roberta-base` fine-tuned for extractive QA on `bayan_qa_600.jsonl` (90 of 600 questions unanswerable), returns `None` when the null score beats the best span. Saved as `bayan_qa_model`.
+- **Search (Day 3):** `paraphrase-multilingual-MiniLM-L12-v2` embeddings + FAISS `IndexFlatIP` (normalized vectors).
 # Workflow / Architecture:
-     [ Incoming Feedback ]
-                        │
-          ┌─────────────┴─────────────┐
-          ▼                           ▼
- [ XLM-RoBERTa Classifier ]   [ Multilingual Sentence Transformer ]
-          │                           │
-          ▼                           ▼
- [ Topic Prediction ]        [ L2 Normalized Embeddings ]
-                                      │
-                                      ▼
-                           [ FAISS Indexing (FlatIP) ]
-                                      │
-                                      ▼
-                           [ Cross-Encoder Re-ranker ]
-                                      │
-                                      ▼
-                           [ Resolved Case Retrieval ]
+ raw message → preprocess (PII mask + normalize) → classifier (ONNX fp32)
+                                               → NER
+                                               → embeddings → FAISS → re-rank → similar cases
+
 
 1. **Text Normalization**: Custom preprocessing that unifies orthography for MSA and accommodates colloquial dialects.
 2. **Topic Categorization**: Classification into key verticals (`billing`, `outage`, `permits`, `account_access`, etc.) with XLM-R.
