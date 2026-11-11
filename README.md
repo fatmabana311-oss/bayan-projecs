@@ -38,7 +38,8 @@ Citizens send free-text feedback (Arabic and English, mixed dialects, emoji, pho
 4. **Context Re-ranking**: Cross-encoder validation to re-score the top 10 retrieved candidates for accurate alignment.
 # Results & Evaluation :
 ### 1. xlm-roberta-base Classifier Performance :
-0.884924	0.879589
+Macro F1 : 0.884924	
+Accuracy:0.879589
 - **95% Bootstrap Confidence Interval**: `[0.798, 0.827]` (extremely narrow, indicating highly stable model parameters)
 
 ### 2. Segmented Slices Analysis (Slices F1-Score)
