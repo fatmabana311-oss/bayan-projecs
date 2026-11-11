@@ -1,5 +1,6 @@
 # Final-Project--Bayan-bilingual-citizen-feedback
-# Prepared by : Shahad altulyan , fatmah aljeaithen https://github.com/shahad030/Final-Project--Bayan-bilingual-citizen-feedback/blob/main/README.md
+# Prepared by : Shahad altulyan , fatmah aljeaithen 
+https://github.com/shahad030/Final-Project--Bayan-bilingual-citizen-feedback/blob/main/README.md
 # Project Overview: 
 Bayan turns Arabic/English citizen messages into structured cases: topic classification, sentiment, entity extraction, and similar-case retrieval. Built by integrating the components developed in Labs 1–7 (SDAIA Academy, SDA-AIE-211).
 This is an AI-powered system designed to process citizen complaints and suggestions. It serves municipal operations by automatically sorting incoming text requests into administrative categories and allowing agents to immediately find historically resolved cases that match new incoming issues—even if they are written in a different language or dialect.
